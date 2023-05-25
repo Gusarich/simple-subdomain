@@ -1,25 +1,25 @@
 import { Address, beginCell, Cell, Contract, contractAddress, ContractProvider, Sender, SendMode } from 'ton-core';
 
-export type SubdomainConfig = {
+export type SubdomainManagerConfig = {
     owner: Address;
     records?: Cell;
 };
 
-export function subdomainConfigToCell(config: SubdomainConfig): Cell {
+export function subdomainManagerConfigToCell(config: SubdomainManagerConfig): Cell {
     return beginCell().storeAddress(config.owner).storeMaybeRef(config.records).endCell();
 }
 
-export class Subdomain implements Contract {
+export class SubdomainManager implements Contract {
     constructor(readonly address: Address, readonly init?: { code: Cell; data: Cell }) {}
 
     static createFromAddress(address: Address) {
-        return new Subdomain(address);
+        return new SubdomainManager(address);
     }
 
-    static createFromConfig(config: SubdomainConfig, code: Cell, workchain = 0) {
-        const data = subdomainConfigToCell(config);
+    static createFromConfig(config: SubdomainManagerConfig, code: Cell, workchain = 0) {
+        const data = subdomainManagerConfigToCell(config);
         const init = { code, data };
-        return new Subdomain(contractAddress(workchain, init), init);
+        return new SubdomainManager(contractAddress(workchain, init), init);
     }
 
     async sendDeploy(provider: ContractProvider, via: Sender, value: bigint) {

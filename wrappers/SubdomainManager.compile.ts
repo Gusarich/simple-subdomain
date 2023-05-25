@@ -2,5 +2,5 @@ import { CompilerConfig } from '@ton-community/blueprint';
 
 export const compile: CompilerConfig = {
     lang: 'func',
-    targets: ['contracts/subdomain.fc'],
+    targets: ['contracts/subdomain-manager.fc'],
 };
