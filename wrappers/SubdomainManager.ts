@@ -29,4 +29,12 @@ export class SubdomainManager implements Contract {
             body: beginCell().endCell(),
         });
     }
+
+    async sendUpdate(provider: ContractProvider, via: Sender, value: bigint, recordKey: bigint, recordValue?: Cell) {
+        await provider.internal(via, {
+            value,
+            sendMode: SendMode.PAY_GAS_SEPARATELY,
+            body: beginCell().storeUint(0x6151f535, 32).storeUint(recordKey, 256).storeMaybeRef(recordValue).endCell(),
+        });
+    }
 }

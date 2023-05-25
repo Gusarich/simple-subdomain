@@ -1,5 +1,5 @@
 import { Blockchain, SandboxContract, TreasuryContract } from '@ton-community/sandbox';
-import { Cell, toNano } from 'ton-core';
+import { Cell, beginCell, toNano } from 'ton-core';
 import { SubdomainManager } from '../wrappers/SubdomainManager';
 import '@ton-community/test-utils';
 import { compile } from '@ton-community/blueprint';
@@ -39,4 +39,33 @@ describe('Subdomain', () => {
     });
 
     it('should deploy', async () => {});
+
+    it('should update records by admin', async () => {
+        const result = await subdomainManager.sendUpdate(
+            owner.getSender(),
+            toNano('0.05'),
+            1n,
+            beginCell().storeUint(123, 64).endCell()
+        );
+        expect(result.transactions).toHaveTransaction({
+            from: owner.address,
+            to: subdomainManager.address,
+            success: true,
+        });
+    });
+
+    it('should not update records not by admin', async () => {
+        const wallet = await blockchain.treasury('wallet');
+        const result = await subdomainManager.sendUpdate(
+            wallet.getSender(),
+            toNano('0.05'),
+            1n,
+            beginCell().storeUint(123, 64).endCell()
+        );
+        expect(result.transactions).toHaveTransaction({
+            from: wallet.address,
+            to: subdomainManager.address,
+            success: false,
+        });
+    });
 });
