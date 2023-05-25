@@ -3,6 +3,8 @@ import { Cell, beginCell, toNano } from 'ton-core';
 import { SubdomainManager } from '../wrappers/SubdomainManager';
 import '@ton-community/test-utils';
 import { compile } from '@ton-community/blueprint';
+import { randomAddress } from '@ton-community/test-utils';
+import { randomBytes } from 'crypto';
 
 describe('Subdomain', () => {
     let code: Cell;
@@ -66,6 +68,42 @@ describe('Subdomain', () => {
             from: wallet.address,
             to: subdomainManager.address,
             success: false,
+        });
+    });
+
+    it('should set next resolver', async () => {
+        const result = await subdomainManager.sendSetNextResolver(owner.getSender(), toNano('0.05'), randomAddress());
+        expect(result.transactions).toHaveTransaction({
+            from: owner.address,
+            to: subdomainManager.address,
+            success: true,
+        });
+    });
+
+    it('should set wallet', async () => {
+        const result = await subdomainManager.sendSetWallet(owner.getSender(), toNano('0.05'), randomAddress());
+        expect(result.transactions).toHaveTransaction({
+            from: owner.address,
+            to: subdomainManager.address,
+            success: true,
+        });
+    });
+
+    it('should set site', async () => {
+        const result = await subdomainManager.sendSetSite(owner.getSender(), toNano('0.05'), randomBytes(32));
+        expect(result.transactions).toHaveTransaction({
+            from: owner.address,
+            to: subdomainManager.address,
+            success: true,
+        });
+    });
+
+    it('should set storage', async () => {
+        const result = await subdomainManager.sendSetStorage(owner.getSender(), toNano('0.05'), randomBytes(32));
+        expect(result.transactions).toHaveTransaction({
+            from: owner.address,
+            to: subdomainManager.address,
+            success: true,
         });
     });
 });
