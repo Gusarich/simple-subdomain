@@ -3,10 +3,15 @@ import { Address, beginCell, Cell, Contract, contractAddress, ContractProvider, 
 export type SubdomainManagerConfig = {
     owner: Address;
     records?: Cell;
+    seed?: bigint;
 };
 
 export function subdomainManagerConfigToCell(config: SubdomainManagerConfig): Cell {
-    return beginCell().storeAddress(config.owner).storeMaybeRef(config.records).endCell();
+    return beginCell()
+        .storeAddress(config.owner)
+        .storeMaybeRef(config.records)
+        .storeUint(config.seed || Math.floor(Math.random() * 1e9), 64)
+        .endCell();
 }
 
 export class SubdomainManager implements Contract {
