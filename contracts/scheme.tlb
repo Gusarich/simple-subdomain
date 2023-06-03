@@ -1,2 +1,2 @@
-#_ owner:MsgAddressInt records:(HashmapE 256 Cell) = Storage;
-update_record#6151f535 key:uint256 value:(Maybe ^Cell) = InternalMsgBody;
+#_ owner:MsgAddressInt domains:(HashMapE 1023 ^(HashmapE 256 Cell)) = Storage;
+update_record#537a3491 domain:^Cell key:uint256 value:(Maybe ^Cell) = InternalMsgBody;

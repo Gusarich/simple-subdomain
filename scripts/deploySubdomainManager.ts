@@ -8,10 +8,10 @@ export async function run(provider: NetworkProvider) {
             {
                 owner: provider.sender().address!,
             },
-            await compile('Subdomain')
+            await compile('SubdomainManager')
         )
     );
 
-    await subdomainManager.sendDeploy(provider.sender(), toNano('0.05'));
+    await subdomainManager.sendDeploy(provider.sender(), toNano('0.02'));
     await provider.waitForDeploy(subdomainManager.address);
 }

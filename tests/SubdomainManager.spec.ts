@@ -46,6 +46,7 @@ describe('Subdomain', () => {
         const result = await subdomainManager.sendUpdate(
             owner.getSender(),
             toNano('0.05'),
+            'test',
             1n,
             beginCell().storeUint(123, 64).endCell()
         );
@@ -61,6 +62,7 @@ describe('Subdomain', () => {
         const result = await subdomainManager.sendUpdate(
             wallet.getSender(),
             toNano('0.05'),
+            'test',
             1n,
             beginCell().storeUint(123, 64).endCell()
         );
@@ -72,7 +74,12 @@ describe('Subdomain', () => {
     });
 
     it('should set next resolver', async () => {
-        const result = await subdomainManager.sendSetNextResolver(owner.getSender(), toNano('0.05'), randomAddress());
+        const result = await subdomainManager.sendSetNextResolver(
+            owner.getSender(),
+            toNano('0.05'),
+            'test',
+            randomAddress()
+        );
         expect(result.transactions).toHaveTransaction({
             from: owner.address,
             to: subdomainManager.address,
@@ -81,7 +88,7 @@ describe('Subdomain', () => {
     });
 
     it('should set wallet', async () => {
-        const result = await subdomainManager.sendSetWallet(owner.getSender(), toNano('0.05'), randomAddress());
+        const result = await subdomainManager.sendSetWallet(owner.getSender(), toNano('0.05'), 'test', randomAddress());
         expect(result.transactions).toHaveTransaction({
             from: owner.address,
             to: subdomainManager.address,
@@ -90,7 +97,7 @@ describe('Subdomain', () => {
     });
 
     it('should set site', async () => {
-        const result = await subdomainManager.sendSetSite(owner.getSender(), toNano('0.05'), randomBytes(32));
+        const result = await subdomainManager.sendSetSite(owner.getSender(), toNano('0.05'), 'test', randomBytes(32));
         expect(result.transactions).toHaveTransaction({
             from: owner.address,
             to: subdomainManager.address,
@@ -99,11 +106,37 @@ describe('Subdomain', () => {
     });
 
     it('should set storage', async () => {
-        const result = await subdomainManager.sendSetStorage(owner.getSender(), toNano('0.05'), randomBytes(32));
+        const result = await subdomainManager.sendSetStorage(
+            owner.getSender(),
+            toNano('0.05'),
+            'test',
+            randomBytes(32)
+        );
         expect(result.transactions).toHaveTransaction({
             from: owner.address,
             to: subdomainManager.address,
             success: true,
         });
+    });
+
+    it('should set and get records for multiple subdomains', async () => {
+        const addr1 = randomAddress();
+        const addr2 = randomAddress();
+        await subdomainManager.sendSetWallet(owner.getSender(), toNano('0.05'), 'test1', addr1);
+        await subdomainManager.sendSetWallet(owner.getSender(), toNano('0.05'), 'test2', addr2);
+
+        var [resolved, value] = await subdomainManager.getResolve(
+            'test1',
+            BigInt('0xe8d44050873dba865aa7c170ab4cce64d90839a34dcfd6cf71d14e0205443b1b')
+        );
+        expect(resolved).toEqual(48);
+        expect(value.beginParse().skip(16).loadAddress()).toEqualAddress(addr1);
+
+        [resolved, value] = await subdomainManager.getResolve(
+            'test2',
+            BigInt('0xe8d44050873dba865aa7c170ab4cce64d90839a34dcfd6cf71d14e0205443b1b')
+        );
+        expect(resolved).toEqual(48);
+        expect(value.beginParse().skip(16).loadAddress()).toEqualAddress(addr2);
     });
 });

@@ -1,20 +1,23 @@
 #include "imports/stdlib.fc";
 
-const int op::update_record = 0x6151f535;
+const int op::update_record = 0x537a3491;
 
 global slice owner;
-global cell records;
+global cell domains;
+
+(cell) dict_get_ref(cell dict, int key_len, slice index) asm(index dict key_len) "DICTGETREF" "NULLSWAPIFNOT" "DROP";
+(cell, ()) ~dict_set_ref(cell dict, int key_len, slice index, cell value) asm(value index dict key_len) "DICTSETREF";
 
 () load_data () impure {
     slice ds = get_data().begin_parse();
     owner = ds~load_msg_addr();
-    records = ds~load_dict();
+    domains = ds~load_dict();
 }
 
 () save_data () impure {
     set_data(begin_cell()
         .store_slice(owner)
-        .store_dict(records)
+        .store_dict(domains)
     .end_cell());
 }
 
@@ -32,6 +35,8 @@ global cell records;
     int op = in_msg_body~load_uint(32);
 
     if (op == op::update_record) {
+        slice domain = in_msg_body~load_ref().begin_parse();
+        cell records = domains.dict_get_ref(domain.slice_bits(), domain);
         int key = in_msg_body~load_uint(256);
         if (in_msg_body~load_uint(1) == 1) {
             cell value = in_msg_body~load_ref();
@@ -39,26 +44,46 @@ global cell records;
         } else {
             records~udict_delete?(256, key);
         }
+        domains~dict_set_ref(domain.slice_bits(), domain, records);
         save_data();
     }
+}
+
+(slice, slice) parse_subdomain (slice subdomain) {
+    ;; TODO: optimize?
+    
+    builder prefix = begin_cell();
+    while (subdomain.preload_uint(8) != 0) {
+        prefix~store_uint(subdomain~load_uint(8), 8);
+    }
+    subdomain~load_uint(8);
+    return (prefix.end_cell().begin_parse(), subdomain);
 }
 
 (int, cell) dnsresolve (slice subdomain, int category) method_id {
     int subdomain_bits = slice_bits(subdomain);
     throw_unless(70, subdomain_bits % 8 == 0);
-    int starts_with_zero_byte = subdomain.preload_int(8) == 0;
-    throw_unless(413, starts_with_zero_byte);
+
+    if (subdomain.preload_uint(8) == 0) {
+        subdomain~skip_bits(8);
+    }
+
+    ;; "test\0qwerty\0" -> "test" "qwerty\0"
+    ;; "test\0" -> "test" ""
+    (subdomain, slice subdomain_suffix) = parse_subdomain(subdomain);
+    int subdomain_suffix_bits = slice_bits(subdomain_suffix);
 
     load_data();
+    cell records = domains.dict_get_ref(subdomain.slice_bits(), subdomain);
 
-    if (subdomain_bits > 8) { ;; more than "." requested
+    if (subdomain_suffix_bits > 0) { ;; more than "<SUBDOMAIN>\0" requested
         category = "dns_next_resolver"H;
     }
 
-    if (category == 0) { ;;  all categories are requested
-        return (8, records);
+    if (category == 0) { ;; all categories are requested
+        return (subdomain.slice_bits() + 8, records);
     }
 
     (cell value, int found) = records.udict_get_ref?(256, category);
-    return (8, value);
+    return (subdomain.slice_bits() + 8, value);
 }
