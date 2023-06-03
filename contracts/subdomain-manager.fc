@@ -80,10 +80,12 @@ global cell domains;
         category = "dns_next_resolver"H;
     }
 
+    int resolved = subdomain_bits - subdomain_suffix_bits;
+
     if (category == 0) { ;; all categories are requested
-        return (subdomain.slice_bits() + 8, records);
+        return (resolved, records);
     }
 
     (cell value, int found) = records.udict_get_ref?(256, category);
-    return (subdomain.slice_bits() + 8, value);
+    return (resolved, value);
 }
