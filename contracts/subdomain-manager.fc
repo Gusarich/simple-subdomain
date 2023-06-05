@@ -5,9 +5,6 @@ const int op::update_record = 0x537a3491;
 global slice owner;
 global cell domains;
 
-(cell) dict_get_ref(cell dict, int key_len, slice index) asm(index dict key_len) "DICTGETREF" "NULLSWAPIFNOT" "DROP";
-(cell, ()) ~dict_set_ref(cell dict, int key_len, slice index, cell value) asm(value index dict key_len) "DICTSETREF";
-
 () load_data () impure {
     slice ds = get_data().begin_parse();
     owner = ds~load_msg_addr();
@@ -36,7 +33,7 @@ global cell domains;
 
     if (op == op::update_record) {
         slice domain = in_msg_body~load_ref().begin_parse();
-        cell records = domains.dict_get_ref(domain.slice_bits(), domain);
+        (cell records, _) = domains.udict_get_ref?(256, slice_hash(domain));
         int key = in_msg_body~load_uint(256);
         if (in_msg_body~load_uint(1) == 1) {
             cell value = in_msg_body~load_ref();
@@ -44,20 +41,16 @@ global cell domains;
         } else {
             records~udict_delete?(256, key);
         }
-        domains~dict_set_ref(domain.slice_bits(), domain, records);
+        domains~udict_set_ref(256, slice_hash(domain), records);
         save_data();
     }
 }
 
 (slice, slice) parse_subdomain (slice subdomain) {
-    ;; TODO: optimize?
-    
-    builder prefix = begin_cell();
-    while (subdomain.preload_uint(8) != 0) {
-        prefix~store_uint(subdomain~load_uint(8), 8);
-    }
-    subdomain~load_uint(8);
-    return (prefix.end_cell().begin_parse(), subdomain);
+    slice subdomain_sfx = subdomain;
+    while (subdomain_sfx~load_uint(8)) { }
+    subdomain~skip_last_bits(8 + slice_bits(subdomain_sfx));
+    return (subdomain, subdomain_sfx);
 }
 
 (int, cell) dnsresolve (slice subdomain, int category) method_id {
@@ -74,7 +67,7 @@ global cell domains;
     int subdomain_suffix_bits = slice_bits(subdomain_suffix);
 
     load_data();
-    cell records = domains.dict_get_ref(subdomain.slice_bits(), subdomain);
+    (cell records, _) = domains.udict_get_ref?(256, slice_hash(subdomain));
 
     if (subdomain_suffix_bits > 0) { ;; more than "<SUBDOMAIN>\0" requested
         category = "dns_next_resolver"H;

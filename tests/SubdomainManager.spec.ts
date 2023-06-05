@@ -139,4 +139,27 @@ describe('Subdomain', () => {
         expect(resolved).toEqual(48);
         expect(value.beginParse().skip(16).loadAddress()).toEqualAddress(addr2);
     });
+
+    it('should set records for multiple subdomains with same prefixes', async () => {
+        let result = await subdomainManager.sendSetWallet(owner.getSender(), toNano('0.05'), 'test', randomAddress());
+        expect(result.transactions).toHaveTransaction({
+            from: owner.address,
+            to: subdomainManager.address,
+            success: true,
+        });
+
+        result = await subdomainManager.sendSetWallet(owner.getSender(), toNano('0.05'), 'testtest', randomAddress());
+        expect(result.transactions).toHaveTransaction({
+            from: owner.address,
+            to: subdomainManager.address,
+            success: true,
+        });
+
+        result = await subdomainManager.sendSetWallet(owner.getSender(), toNano('0.05'), 'testab', randomAddress());
+        expect(result.transactions).toHaveTransaction({
+            from: owner.address,
+            to: subdomainManager.address,
+            success: true,
+        });
+    });
 });
