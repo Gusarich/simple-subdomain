@@ -33,7 +33,7 @@ global cell domains;
 
     if (op == op::update_record) {
         slice domain = in_msg_body~load_ref().begin_parse();
-        (cell records, _) = domains.udict_get_ref?(256, slice_hash(domain));
+        (cell records, _) = domains.udict_get_ref?(256, string_hash(domain));
         int key = in_msg_body~load_uint(256);
         if (in_msg_body~load_uint(1) == 1) {
             cell value = in_msg_body~load_ref();
@@ -41,7 +41,7 @@ global cell domains;
         } else {
             records~udict_delete?(256, key);
         }
-        domains~udict_set_ref(256, slice_hash(domain), records);
+        domains~udict_set_ref(256, string_hash(domain), records);
         save_data();
     }
 }
@@ -67,7 +67,7 @@ global cell domains;
     int subdomain_suffix_bits = slice_bits(subdomain_suffix);
 
     load_data();
-    (cell records, _) = domains.udict_get_ref?(256, slice_hash(subdomain));
+    (cell records, _) = domains.udict_get_ref?(256, string_hash(subdomain));
 
     if (subdomain_suffix_bits > 0) { ;; more than "<SUBDOMAIN>\0" requested
         category = "dns_next_resolver"H;
