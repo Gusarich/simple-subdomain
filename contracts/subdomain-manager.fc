@@ -49,7 +49,7 @@ global cell domains;
 (slice, slice) parse_subdomain (slice subdomain) {
     slice subdomain_sfx = subdomain;
     while (subdomain_sfx~load_uint(8)) { }
-    subdomain~skip_last_bits(8 + slice_bits(subdomain_sfx));
+    subdomain~skip_last_bits(slice_bits(subdomain_sfx));
     return (subdomain, subdomain_sfx);
 }
 
@@ -61,8 +61,8 @@ global cell domains;
         subdomain~skip_bits(8);
     }
 
-    ;; "test\0qwerty\0" -> "test\0" "qwerty\0"
-    ;; "test\0" -> "test\0" ""
+    ;; "test\0qwerty\0" -> "test" "qwerty\0"
+    ;; "test\0" -> "test" ""
     (subdomain, slice subdomain_suffix) = parse_subdomain(subdomain);
     int subdomain_suffix_bits = slice_bits(subdomain_suffix);
 
