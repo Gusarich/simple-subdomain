@@ -61,8 +61,8 @@ global cell domains;
         subdomain~skip_bits(8);
     }
 
-    ;; "test\0qwerty\0" -> "test" "qwerty\0"
-    ;; "test\0" -> "test" ""
+    ;; "test\0qwerty\0" -> "test\0" "qwerty\0"
+    ;; "test\0" -> "test\0" ""
     (subdomain, slice subdomain_suffix) = parse_subdomain(subdomain);
     int subdomain_suffix_bits = slice_bits(subdomain_suffix);
 

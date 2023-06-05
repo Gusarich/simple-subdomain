@@ -77,7 +77,7 @@ export class SubdomainManager implements Contract {
             sendMode: SendMode.PAY_GAS_SEPARATELY,
             body: beginCell()
                 .storeUint(0x537a3491, 32)
-                .storeRef(beginCell().storeStringTail(domain).endCell())
+                .storeRef(beginCell().storeStringTail(domain).storeUint(0, 8).endCell())
                 .storeUint(recordKey, 256)
                 .storeMaybeRef(recordValue)
                 .endCell(),
